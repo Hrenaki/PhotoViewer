@@ -203,7 +203,7 @@ namespace WpfApp1
                 imageBox.Source = getRotatedTransformedBitmapFromImageSource(imageBox.Source, 90);
         }
 
-        // Methods to listBox in "listTabItem"
+        // Methods to listBox
         private void listBoxWithPictures_DoubleClick(object sender, MouseButtonEventArgs e)
         {
             string path = (listBoxWithPictures.SelectedItem as PictureListItem).Path;
@@ -211,11 +211,33 @@ namespace WpfApp1
             imageBox.Source = getBitmapImage(path);
             imageTabItem.Focus();
         }
+
+        private void openMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            string path = (listBoxWithPictures.SelectedItem as PictureListItem).Path;
+            index = files.IndexOf(path);
+            imageBox.Source = getBitmapImage(path);
+            imageTabItem.Focus();
+        }
+
+        private void deleteMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            if(MessageBox.Show("Delete this picture?", "Questing", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
+            {
+                int target = index;
+                index = (index + 1) % files.Count;
+
+                imageBox.Source = files.Count - 1 == 0 ? null : getBitmapImage(files[index]);
+
+                listBoxWithPictures.Items.RemoveAt(target);
+                File.Delete(files[target]);
+                files.RemoveAt(target);
+            }
+        }
     }
 
     class PictureListItem
     {
-        //public BitmapImage Source { get; set; }
         public string Path { get; set; }
     }
 }

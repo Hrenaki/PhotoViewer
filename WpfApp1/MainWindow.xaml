@@ -169,6 +169,12 @@
                             </Grid>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
+                    <ListBox.ContextMenu>
+                        <ContextMenu>
+                            <MenuItem Header="Open" Click="openMenuItem_Click"/>
+                            <MenuItem Header="Delete" Click="deleteMenuItem_Click"/>
+                        </ContextMenu>
+                    </ListBox.ContextMenu>
                 </ListBox>
             </TabItem>
         </TabControl>
