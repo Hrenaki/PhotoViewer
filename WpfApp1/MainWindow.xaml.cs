@@ -139,6 +139,19 @@ namespace WpfApp1
             return bit;
         }
 
+        private TransformedBitmap getRotatedTransformedBitmapFromImageSource(ImageSource imageSource, double angle)
+        {
+            TransformedBitmap transBit = new TransformedBitmap();
+
+            transBit.BeginInit();
+            transBit.Source = imageSource as BitmapImage;
+            transBit.Source ??= imageSource as TransformedBitmap;
+            transBit.Transform = new RotateTransform(angle);
+            transBit.EndInit();
+
+            return transBit;
+        }
+
         private bool NotAPicture(string s)
         {
             return !(s.EndsWith("jpg") || s.EndsWith("png"));
@@ -181,33 +194,13 @@ namespace WpfApp1
         private void rotateLButton_Click(object sender, RoutedEventArgs e)
         {
             if (files != null && files.Count != 0)
-            {
-                TransformedBitmap transBit = new TransformedBitmap();
-
-                transBit.BeginInit();
-                transBit.Source = imageBox.Source as BitmapImage;
-                transBit.Source ??= imageBox.Source as TransformedBitmap;
-                transBit.Transform = new RotateTransform(-90);
-                transBit.EndInit();
-
-                imageBox.Source = transBit;
-            }
+                imageBox.Source = getRotatedTransformedBitmapFromImageSource(imageBox.Source, -90);
         }
 
         private void rotateRButton_Click(object sender, RoutedEventArgs e)
         {
             if (files != null && files.Count != 0)
-            {
-                TransformedBitmap transBit = new TransformedBitmap();
-
-                transBit.BeginInit();
-                transBit.Source = imageBox.Source as BitmapImage;
-                transBit.Source ??= imageBox.Source as TransformedBitmap;
-                transBit.Transform = new RotateTransform(90);
-                transBit.EndInit();
-
-                imageBox.Source = transBit;
-            }
+                imageBox.Source = getRotatedTransformedBitmapFromImageSource(imageBox.Source, 90);
         }
 
         // Methods to listBox in "listTabItem"

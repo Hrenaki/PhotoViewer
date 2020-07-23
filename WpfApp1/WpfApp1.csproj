@@ -6,39 +6,4 @@
     <UseWPF>true</UseWPF>
   </PropertyGroup>
 
-  <ItemGroup>
-    <None Remove="Resources\back.png" />
-    <None Remove="Resources\back.svg" />
-    <None Remove="Resources\forward.png" />
-    <None Remove="Resources\forward.svg" />
-    <None Remove="Resources\rotateL.png" />
-    <None Remove="Resources\rotateL.svg" />
-    <None Remove="Resources\rotateR.png" />
-    <None Remove="Resources\rotateR.svg" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Page Remove="Resources\back.xaml" />
-    <Page Remove="Resources\forward.xaml" />
-    <Page Remove="Resources\rotateL.xaml" />
-    <Page Remove="Resources\rotateR.xaml" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Resource Include="Resources\back.png" />
-    <Resource Include="Resources\back.svg" />
-    <Resource Include="Resources\back.xaml">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resources\forward.png" />
-    <Resource Include="Resources\forward.svg" />
-    <Resource Include="Resources\forward.xaml" />
-    <Resource Include="Resources\rotateL.png" />
-    <Resource Include="Resources\rotateL.svg" />
-    <Resource Include="Resources\rotateL.xaml" />
-    <Resource Include="Resources\rotateR.png" />
-    <Resource Include="Resources\rotateR.svg" />
-    <Resource Include="Resources\rotateR.xaml" />
-  </ItemGroup>
-
 </Project>
