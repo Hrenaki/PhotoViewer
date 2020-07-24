@@ -33,7 +33,6 @@ namespace WpfApp1
             InitializeComponent();
 
             textBox.Text = "D:\\TestPhoto";
-            //textBox.Focus();
             listTabItem.Focus();
              
             WindowStartupLocation = WindowStartupLocation.CenterScreen;
@@ -82,12 +81,11 @@ namespace WpfApp1
 
         private void showButton_Click(object sender, RoutedEventArgs e)
         {
-            string path = textBox.Text;
-            if (path.Length != 0)
+            if (textBox.Text.Length != 0)
             {
                 try
                 {
-                    files = Directory.GetFiles(path).ToList();
+                    files = Directory.GetFiles(textBox.Text).ToList();
                     files.RemoveAll(NotAPicture);
 
                     BackgroundWorker bgw = new BackgroundWorker();
@@ -215,7 +213,6 @@ namespace WpfApp1
 
     class PictureListItem
     {
-        //public BitmapImage Source { get; set; }
         public string Path { get; set; }
     }
 }
