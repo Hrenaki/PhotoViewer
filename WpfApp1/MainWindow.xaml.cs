@@ -73,6 +73,7 @@ namespace WpfApp1
         private void bgw_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
             statsTextBlock.Text = "Done in " + e.Result + " ticks. Loaded pics : " + files.Count;
+            imageBox.Source = getBitmapImage(files[index]);
         }
 
         private void MainWindow_OnLoaded(object sender, RoutedEventArgs e)
