@@ -6,7 +6,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:WpfApp1"
         mc:Ignorable="d"
-        Title="MainWindow" Height="500" Width="930">
+        Title="MainWindow" Height="500" Width="930"
+        DataContext="{Binding RelativeSource={RelativeSource Self}}">
 
     <Window.Resources>
         <Style TargetType="Button">
@@ -162,10 +163,10 @@
                                 </Grid.ColumnDefinitions>
                                 <Image Height="100" Width="100">
                                     <Image.Source>
-                                        <BitmapImage UriSource="{Binding Path}" DecodePixelWidth="100" CacheOption="OnLoad"/>
-                                    </Image.Source>
-                                </Image>
-                                <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{Binding Path}" Margin="5,0"/>
+                                        <BitmapImage UriSource="{Binding Path=Path}" DecodePixelWidth="100" DecodePixelHeight="100" CacheOption="OnLoad" CreateOptions="IgnoreImageCache"/>
+                                    </Image.Source> 
+                                </Image> 
+                                <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{Binding Path=Path}" Margin="5,0"/>
                             </Grid>
                         </DataTemplate>
                     </ListBox.ItemTemplate>

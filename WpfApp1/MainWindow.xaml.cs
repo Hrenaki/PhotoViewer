@@ -17,6 +17,9 @@ using System.Diagnostics;
 using System.Threading;
 using System.Windows.Media.Animation;
 using System.ComponentModel;
+using System.Collections.ObjectModel;
+using System.Runtime.CompilerServices;
+using System.Runtime.Caching;
 
 namespace WpfApp1
 {
@@ -29,6 +32,8 @@ namespace WpfApp1
         private int index = 0;
         private readonly DoubleAnimation mainGridAnim;
         private double angle = 0;
+        BackgroundWorker bgw;
+
         public MainWindow()
         {
             InitializeComponent();
@@ -50,31 +55,48 @@ namespace WpfApp1
                 To = 1.0,
                 Duration = new Duration(TimeSpan.FromSeconds(3))
             };
+
+            bgw = new BackgroundWorker();
+            bgw.WorkerReportsProgress = true;
+            bgw.DoWork += bgw_DoWork;
+            bgw.ProgressChanged += bgw_ProgressChanged;
+            bgw.RunWorkerCompleted += bgw_RunWorkerCompleted;
         }
 
+        //BackgroundWorker "bgw" methods
         private void bgw_DoWork(object sender, DoWorkEventArgs e)
         {
             Stopwatch sw = new Stopwatch();
 
-            sw.Start();
-            for(int i = 0; i < files.Count; i++)
-                (sender as BackgroundWorker).ReportProgress(Convert.ToInt32((double)i * 100 / files.Count) + 5, new PictureListItem { Path = files[i] });
-            sw.Stop();
-            e.Result = sw.ElapsedTicks.ToString();
-        }
+            ListBox listBox = (e.Argument as List<object>)[0] as ListBox;
+            List<string> source = (e.Argument as List<object>)[1] as List<string>;
 
+            sw.Start();
+            for (int i = 0; i < source.Count; i++)
+                (sender as BackgroundWorker).ReportProgress(Convert.ToInt32(i * 100.0 / source.Count) + 3,
+                    new List<object> { listBox, new PictureListItem { Path = source[i] } });
+            sw.Stop();
+            e.Result = new List<object>() { sw.ElapsedTicks.ToString(), listBox };
+        }
         private void bgw_ProgressChanged(object sender, ProgressChangedEventArgs e)
         {
             statsProgBar.Value = e.ProgressPercentage;
-            listBoxWithPictures.Items.Add(e.UserState);
+            ((e.UserState as List<object>)[0] as ListBox).Items.Add((e.UserState as List<object>)[1] as PictureListItem);
         }
 
         private void bgw_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
-            statsTextBlock.Text = "Done in " + e.Result + " ticks. Loaded pics : " + files.Count;
-            imageBox.Source = getBitmapImage(files[index]);
-        }
+            statsTextBlock.Text = "Done in " + ((e.Result as List<object>)[0] as string) + " ticks. Loaded pics : " + files.Count;
 
+            ListBox listBox = (e.Result as List<object>)[1] as ListBox;
+            listBox.UpdateLayout();
+            (listBox.Parent as TabItem).Focus();
+
+            imageBox.Source = files.Count == 0 ? null : getBitmapImage(files[0]);
+        }
+        //-------------------------------------------------------------------------------------------------------------------------
+
+        
         private void MainWindow_OnLoaded(object sender, RoutedEventArgs e)
         {
             stackPanel.BeginAnimation(OpacityProperty, mainGridAnim);
@@ -82,22 +104,20 @@ namespace WpfApp1
 
         private void showButton_Click(object sender, RoutedEventArgs e)
         {
+
             if (textBox.Text.Length != 0)
             {
-                listBoxWithPictures.Items.Clear();
+                if (files != null)
+                    files.Clear();
+
+                index = 0;
 
                 try
                 {
                     files = Directory.GetFiles(textBox.Text).ToList();
                     files.RemoveAll(NotAPicture);
 
-                    BackgroundWorker bgw = new BackgroundWorker();
-                    bgw.WorkerReportsProgress = true;
-                    bgw.DoWork += bgw_DoWork;
-                    bgw.ProgressChanged += bgw_ProgressChanged;
-                    bgw.RunWorkerCompleted += bgw_RunWorkerCompleted;
-                    bgw.RunWorkerAsync();
-
+                    updateListBox(listBoxWithPictures, files);
                     tabControl.BeginAnimation(OpacityProperty, mainGridAnim);
                 }
                 catch (DirectoryNotFoundException)
@@ -121,6 +141,20 @@ namespace WpfApp1
             bit.BeginInit();
             bit.StreamSource = new FileStream(path, FileMode.Open, FileAccess.Read);
             bit.CacheOption = BitmapCacheOption.OnLoad;
+            bit.EndInit();
+
+            bit.StreamSource.Dispose();
+            return bit;
+        }
+
+        private BitmapImage getBitmapImage(string path, int height, int width)
+        {
+            BitmapImage bit = new BitmapImage();
+            bit.BeginInit();
+            bit.StreamSource = new FileStream(path, FileMode.Open, FileAccess.Read);
+            bit.CacheOption = BitmapCacheOption.OnLoad;
+            bit.DecodePixelHeight = height;
+            bit.DecodePixelWidth = width;
             bit.EndInit();
 
             bit.StreamSource.Dispose();
@@ -198,6 +232,23 @@ namespace WpfApp1
             }
         }
 
+        private void updateListBox(ListBox listBox, List<string> source)
+        {
+            listBox.Items.Clear();
+            statsProgBar.Value = 0;
+
+            List<object> data = new List<object>() { listBox, source };
+            bgw.RunWorkerAsync(data);
+        }
+
+        private void refreshPictureListItem(ListBox listBox, int index)
+        {
+            listBox.Items.RemoveAt(index);
+            listBox.Items.Insert(index, new PictureListItem { Path = files[index] });
+            listBox.UpdateLayout();          
+        }
+        //-------------------------------------------------------------------------------------------------------------------------
+
         // OnClick methods to buttons in controlPanel (from left to right)
         private void deleteButton_Click(object sender, RoutedEventArgs e)
         {
@@ -220,7 +271,10 @@ namespace WpfApp1
             {
                 if (angle % 360 != 0 &&
                     MessageBox.Show("Do you want to apply changes?", "Questing", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
+                {
                     savePicture(imageBox.Source as TransformedBitmap, files[index]);
+                    refreshPictureListItem(listBoxWithPictures, index);
+                }
                 angle = 0;
                 
                 index = index > 0 ? index - 1 : files.Count - 1;
@@ -233,7 +287,10 @@ namespace WpfApp1
             {
                 if (angle % 360 != 0 &&
                     MessageBox.Show("Do you want to apply changes?", "Questing", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
+                {
                     savePicture(imageBox.Source as TransformedBitmap, files[index]);
+                    refreshPictureListItem(listBoxWithPictures, index);
+                }
                 angle = 0;
 
                 index = (index + 1) % files.Count;
@@ -248,7 +305,6 @@ namespace WpfApp1
                 angle += -90;
             }
         }
-
         private void rotateRButton_Click(object sender, RoutedEventArgs e)
         {
             if (files != null && files.Count != 0)
@@ -257,10 +313,11 @@ namespace WpfApp1
                 angle += 90;
             }
         }
+        //-------------------------------------------------------------------------------------------------------------------------
 
         /*private void imageTabItem_LostFocus(object sender, RoutedEventArgs e)
         {
-            if((stackPanel.IsFocused || listTabItem.IsFocused) && angle % 360 != 0)
+            if((textBox.IsFocused || listTabItem.IsFocused || showbtn.IsFocused) && angle % 360 != 0)
             {
                 imageTabItem.Focus();
                 if(MessageBox.Show("Do you want to apply changes?", "Questing", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
@@ -305,6 +362,7 @@ namespace WpfApp1
                 angle = 0;
             }
         }
+        //-------------------------------------------------------------------------------------------------------------------------
     }
 
     class PictureListItem
