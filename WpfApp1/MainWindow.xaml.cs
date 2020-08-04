@@ -31,6 +31,8 @@ namespace WpfApp1
         private List<string> files;
         private int index = 0;
         private readonly DoubleAnimation mainGridAnim;
+        private readonly ColorAnimation colorAnimation;
+
         private double angle = 0;
         BackgroundWorker bgw;
 
@@ -41,6 +43,7 @@ namespace WpfApp1
             textBox.Text = "D:\\TestPhoto";
             listTabItem.Focus();
 
+            Opacity = 1;
             Title = "PhotoViewer";
             WindowStartupLocation = WindowStartupLocation.CenterScreen;
             Height = SystemParameters.PrimaryScreenHeight - 100;
@@ -53,14 +56,27 @@ namespace WpfApp1
             {
                 From = 0.0,
                 To = 1.0,
-                Duration = new Duration(TimeSpan.FromSeconds(3))
+                Duration = new Duration(TimeSpan.FromSeconds(4))
             };
+
+            colorAnimation = new ColorAnimation()
+            {
+                From = Colors.Black,
+                To = Colors.White,
+                Duration = new Duration(TimeSpan.FromSeconds(4))
+            };
+            colorAnimation.Completed += colorAnimation_Completed;
 
             bgw = new BackgroundWorker();
             bgw.WorkerReportsProgress = true;
             bgw.DoWork += bgw_DoWork;
             bgw.ProgressChanged += bgw_ProgressChanged;
             bgw.RunWorkerCompleted += bgw_RunWorkerCompleted;
+        }
+
+        private void colorAnimation_Completed(object sender, EventArgs e)
+        {
+            stackPanel.BeginAnimation(OpacityProperty, mainGridAnim);
         }
 
         //BackgroundWorker "bgw" methods
@@ -95,11 +111,14 @@ namespace WpfApp1
             imageBox.Source = files.Count == 0 ? null : getBitmapImage(files[0]);
         }
         //-------------------------------------------------------------------------------------------------------------------------
-
         
         private void MainWindow_OnLoaded(object sender, RoutedEventArgs e)
         {
-            stackPanel.BeginAnimation(OpacityProperty, mainGridAnim);
+            SolidColorBrush animatedBrush = new SolidColorBrush();
+            mainGrid.Background = animatedBrush;
+
+            BeginAnimation(OpacityProperty, mainGridAnim);
+            animatedBrush.BeginAnimation(SolidColorBrush.ColorProperty, colorAnimation);
         }
 
         private void showButton_Click(object sender, RoutedEventArgs e)
@@ -107,24 +126,46 @@ namespace WpfApp1
 
             if (textBox.Text.Length != 0)
             {
-                if (files != null)
-                    files.Clear();
-
-                index = 0;
-
-                try
+                if (!System.IO.Path.HasExtension(textBox.Text))
                 {
-                    files = Directory.GetFiles(textBox.Text).ToList();
-                    files.RemoveAll(NotAPicture);
+                    if (files != null)
+                        files.Clear();
 
-                    updateListBox(listBoxWithPictures, files);
-                    tabControl.BeginAnimation(OpacityProperty, mainGridAnim);
+                    index = 0;
+
+                    try
+                    {
+                        files = Directory.GetFiles(textBox.Text).ToList();
+                        files.RemoveAll(NotAPicture);
+
+                        updateListBox(listBoxWithPictures, files);
+                        tabControl.BeginAnimation(OpacityProperty, mainGridAnim);
+
+                        listTabItem.IsEnabled = true;
+                        listTabItem.Opacity = 1;
+
+                    }
+                    catch (DirectoryNotFoundException)
+                    {
+                        MessageBox.Show("Error! Directory wasn't found!");
+                        textBox.Clear();
+                        textBox.Focus();
+                    }
                 }
-                catch (DirectoryNotFoundException)
+                else
                 {
-                    MessageBox.Show("Error! Directory wasn't found!");
-                    textBox.Clear();
-                    textBox.Focus();
+                    if (NotAPicture(textBox.Text) && MessageBox.Show("Do you want to open the file with associated app?", "Questing",
+                            MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+                            Process.Start(new ProcessStartInfo(textBox.Text) { UseShellExecute = true} );
+                    else
+                    {
+                        tabControl.BeginAnimation(OpacityProperty, mainGridAnim);
+                        imageBox.Source = getBitmapImage(textBox.Text);
+                        imageTabItem.Focus();
+
+                        listTabItem.IsEnabled = false;
+                        listTabItem.Opacity = 0;
+                    }
                 }
             }
             else
@@ -133,8 +174,20 @@ namespace WpfApp1
                 textBox.Focus();
             }
         }
+        private void treeButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (textBox.Text != "")
+            {
+                WindowWithTree treeWin = new WindowWithTree(textBox.Text, this);
+                treeWin.Show();
+            }
+        }
 
         //Supportive functions
+        public void setTextBoxText(string text)
+        {
+            textBox.Text = text;
+        }
         private BitmapImage getBitmapImage(string path)
         {
             BitmapImage bit = new BitmapImage();
@@ -362,6 +415,8 @@ namespace WpfApp1
                 angle = 0;
             }
         }
+
+        
         //-------------------------------------------------------------------------------------------------------------------------
     }
 
