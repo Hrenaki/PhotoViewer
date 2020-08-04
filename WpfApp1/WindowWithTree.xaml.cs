@@ -73,55 +73,38 @@ namespace WpfApp1
 
         private void getDirectoriesAndFiles(string path, TreeViewItem root)
         {
-            bool flag = false;
-            int i;
-
             try
             {
                 foreach (var file in Directory.GetFiles(path).ToList())
                 {
                     TreeViewItem item = new TreeViewItem() { Header = System.IO.Path.GetFileName(file), Foreground = fileBrush };
-
-                    if (root.Items.Count != 0)
-                        for (i = 0; i < root.Items.Count; i++)
-                            if ((root.Items[i] as TreeViewItem).Header as string == item.Header as string)
-                            {
-                                flag = true;
-                                i = root.Items.Count;
-                            }
-
-                    if (!flag)
+                    if (!findTreeViewItemWithHeader(item.Header as string, root))
                         root.Items.Add(item);
-
-                    flag = false;
                 }
             }
             catch (Exception) { }
 
-            flag = false;
             try
             {
                 foreach (var directory in Directory.GetDirectories(path).ToList())
                 {
                     TreeViewItem item = new TreeViewItem() { Header = getDirectoryName(directory, '\\'), Foreground = directoryBrush };
-                    
-                    if(root.Items.Count != 0)
-                        for(i = 0; i < root.Items.Count; i++)
-                            if((root.Items[i] as TreeViewItem).Header as string == item.Header as string)
-                            {
-                                flag = true;
-                                i = root.Items.Count;
-                            }
-
-                    if (!flag)
+                    if (!findTreeViewItemWithHeader(item.Header as string, root))
                         root.Items.Add(item);
-                    flag = false;
                 }
             }
             catch (Exception) { }
 
             root.Items.SortDescriptions.Clear();
             root.Items.SortDescriptions.Add(new SortDescription("Header", ListSortDirection.Ascending));
+        }
+        private bool findTreeViewItemWithHeader(string header, TreeViewItem source)
+        {
+            if (source.Items.Count != 0)
+                for (int i = 0; i < source.Items.Count; i++)
+                    if ((source.Items[i] as TreeViewItem).Header as string == header)
+                        return true;
+            return false;
         }
         
         private void treeView_MouseDoubleClick(object sender, MouseButtonEventArgs e)
