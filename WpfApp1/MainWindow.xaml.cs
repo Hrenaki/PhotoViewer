@@ -179,6 +179,7 @@ namespace WpfApp1
             if (textBox.Text != "")
             {
                 WindowWithTree treeWin = new WindowWithTree(textBox.Text, this);
+                treeWin.Owner = this;
                 treeWin.Show();
             }
         }
@@ -226,7 +227,6 @@ namespace WpfApp1
             bit.StreamSource.Dispose();
             return bit;
         }
-
         private TransformedBitmap getRotatedTransformedBitmapFromImageSource(ImageSource imageSource, double angle)
         {
             TransformedBitmap transBit = new TransformedBitmap();

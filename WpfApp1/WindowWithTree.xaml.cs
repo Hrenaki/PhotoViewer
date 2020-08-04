@@ -68,7 +68,7 @@ namespace WpfApp1
             else MessageBox.Show("Tree building is FAILED! Check the path!");
 
             //Configuring window
-            WindowStartupLocation = WindowStartupLocation.CenterScreen;
+            WindowStartupLocation = WindowStartupLocation.CenterOwner;
         }
 
         private void getDirectoriesAndFiles(string path, TreeViewItem root)
